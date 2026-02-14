@@ -1,0 +1,21 @@
+[
+  {
+    "document_id": "EYENG-DWG-A511351610-ISSUE13",
+    "document_type": "DRAWING",
+    "document_number": "A511351610",
+    "revision": "13",
+    "issue_date": "2021-12-13T00:00:00Z",
+    "aircraft_model": "A350-1041",
+    "source_pdf_path": "/pdfs/drawings/A511351610_13.pdf",
+    "metadata": {
+      "title": "PLACARD FABRICATION DRAWING",
+      "ewr": "EYENG/EWR/0223/3812",
+      "issue_description": "ORIGINAL ISSUE",
+      "date": "2023-02-27",
+      "drawn_by": "RAMON CASTRO",
+      "checked_by": "NUR EKO BUDIYANTO",
+      "approved_by": "PAUL MORALES",
+      "sheets": 6
+    }
+  }
+]

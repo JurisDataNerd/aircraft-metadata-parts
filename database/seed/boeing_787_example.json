@@ -1,0 +1,24 @@
+[
+  {
+    "document_id": "DMC-B787-A-11-25-03-030-941A-D__030.4",
+    "document_type": "IPD",
+    "document_number": "DMC-B787-A-11-25-03-030-941A-D",
+    "revision": "030.4",
+    "issue_date": "2022-06-20T00:00:00Z",
+    "aircraft_model": "787-8",
+    "source_pdf_path": "/pdfs/787/IPD-11-25-03-030.4.pdf",
+    "metadata": {
+      "publication": "PMC-B787-81205-A3307-00",
+      "pub_issue": "170",
+      "pub_date": "2022-08-15",
+      "airline_revision": "030.4",
+      "applicable_to": {
+        "model": "787-8",
+        "line_number": 68,
+        "operator": "LAN",
+        "serial_number": "38471",
+        "registry": "CC-BBA"
+      }
+    }
+  }
+]
