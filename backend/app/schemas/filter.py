@@ -1,22 +1,19 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-class FilterRequest(BaseModel):
-    line_number: int
-    revision: Optional[str] = None
-
 class PartResult(BaseModel):
     part_number: str
-    nomenclature: Optional[str]
-    page_number: Optional[int]
-    figure: Optional[str]
-    change_type: Optional[str]
-    sb_reference: Optional[str]
+    nomenclature: Optional[str] = None
+    page_number: Optional[int] = None
+    figure: Optional[str] = None
+    change_type: Optional[str] = None
+    sb_reference: Optional[str] = None
+    upa: Optional[int] = None
+    supplier_code: Optional[str] = None
     is_applicable: bool
+    revision: Optional[str] = None
 
 class FilterResponse(BaseModel):
-    line_number: int
-    revision: str
-    applicable_parts: List[PartResult]
-    non_applicable_parts: List[PartResult]
-    total_count: int
+    success: bool
+    data: dict
+    metadata: dict

@@ -5,7 +5,6 @@ from bson import ObjectId
 from .document import PyObjectId
 
 class DrawingItemModel(BaseModel):
-    """Model untuk collection 'drawing_items' (FR-02)"""
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     drawing_item_id: str = Field(..., description="Unique item identifier")
     document_id: PyObjectId = Field(...)
@@ -21,18 +20,14 @@ class DrawingItemModel(BaseModel):
     artwork_reference: Optional[str] = None
     notes: Optional[str] = None
     
+    # Opsional dari tabel halaman 5
+    size: Optional[str] = None
+    background_color: Optional[str] = None
+    text_color: Optional[str] = None
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-        schema_extra = {
-            "example": {
-                "drawing_item_id": "A511351610-057",
-                "part_number": "A511351610-057",
-                "title": "ECB ELECTRONIC CONTROL BOX",
-                "sheet_number": "2",
-                "approval_authority": "EASA DOA"
-            }
-        }

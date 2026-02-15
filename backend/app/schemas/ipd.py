@@ -33,7 +33,6 @@ class IPDPartCreate(IPDPartBase):
     upa: Optional[int] = None
     sb_reference: Optional[str] = None
     placard_content: Optional[str] = None
-    metadata: Optional[Dict] = None
 
 class IPDPartResponse(IPDPartBase):
     id: str
