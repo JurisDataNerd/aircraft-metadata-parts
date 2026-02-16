@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
-from typing import Optional, List
+from typing import Optional, List, Annotated
 from datetime import datetime
 
 from ..core.database import get_db
@@ -81,7 +81,7 @@ async def get_document(
 @router.get("/{document_id}/parts")
 async def get_document_parts(
     document_id: str,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 ):
     """Get all parts (IPD or Drawing) for a specific document"""
     # Cari document
