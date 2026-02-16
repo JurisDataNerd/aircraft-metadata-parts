@@ -1,4 +1,4 @@
-// Migration 008: Create revisions collection (UPDATED SCHEMA)
+// Migration 008: Create revisions collection (UPDATED FOR STICKERS)
 db.createCollection("revisions", {
   validator: {
     $jsonSchema: {
@@ -10,13 +10,40 @@ db.createCollection("revisions", {
         revision: { bsonType: "string" },
         previous_revision_id: { bsonType: "objectId" },
         next_revision_id: { bsonType: "objectId" },
-        parts: { bsonType: "array" },
+
+        // Parts snapshot with sticker info
+        parts: {
+          bsonType: "array",
+          items: {
+            bsonType: "object",
+            properties: {
+              part_number: { bsonType: "string" },
+              is_sticker: { bsonType: "bool" },
+              sticker_type: { bsonType: "string" },
+              sticker_text: { bsonType: "string" },
+            },
+          },
+        },
+
         part_count: { bsonType: "int" },
-        change_summary: { bsonType: "object" },
+        sticker_count: { bsonType: "int" }, // New
+
+        change_summary: {
+          bsonType: "object",
+          properties: {
+            type: { enum: ["INITIAL", "UPDATE", "ADD", "MODIFY", "DELETE"] },
+            added_parts: { bsonType: "array" },
+            removed_parts: { bsonType: "array" },
+            modified_parts: { bsonType: "array" },
+            sticker_changes: { bsonType: "array" }, // New
+          },
+        },
+
         changes: { bsonType: "array" },
         issue_date: { bsonType: "date" },
         source_pdf_path: { bsonType: "string" },
         file_hash: { bsonType: "string" },
+
         metadata: {
           bsonType: "object",
           required: ["created_by", "created_at", "status"],
@@ -30,6 +57,7 @@ db.createCollection("revisions", {
             status: { enum: ["draft", "under_review", "approved", "superseded", "rejected"] },
           },
         },
+
         version: { bsonType: "int" },
         created_at: { bsonType: "date" },
         updated_at: { bsonType: "date" },
@@ -38,12 +66,6 @@ db.createCollection("revisions", {
   },
 });
 
-// Indexes
-db.revisions.createIndex({ document_id: 1, revision: 1 }, { unique: true });
-db.revisions.createIndex({ document_id: 1, created_at: -1 });
-db.revisions.createIndex({ previous_revision_id: 1 });
-db.revisions.createIndex({ next_revision_id: 1 });
-db.revisions.createIndex({ "metadata.status": 1 });
-db.revisions.createIndex({ file_hash: 1 });
-
-print("✅ Migration 008 completed: revisions collection created");
+// Additional indexes
+db.revisions.createIndex({ "parts.is_sticker": 1 });
+db.revisions.createIndex({ sticker_count: 1 });
