@@ -58,7 +58,7 @@ async def health_check():
 async def startup_event():
     """Connect to MongoDB Atlas on startup"""
     logger.info("🚀 Starting up...")
-    await Database.connect_db(settings.MONGODB_URL)
+    await Database.connect_db(settings.MONGO_URI)
     
     # Create upload directory
     import os

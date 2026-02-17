@@ -2,6 +2,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
 import logging
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -42,5 +43,5 @@ class Database:
 
 # Dependency for FastAPI
 async def get_database():
-    db_name = settings.MONGODB_DB_NAME
+    db_name = settings.MONGO_DB
     return Database.get_db(db_name)

@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 import time
 from motor.motor_asyncio import AsyncIOMotorDatabase
-
+from datetime import datetime
 from app.core.database import get_database
 from app.services.filter_service import FilterService
 
@@ -107,6 +107,8 @@ async def check_line_applicability(
         }
     }
 
+# backend/app/api/filter.py - Tambahkan endpoint ini
+
 @router.get("/statistics")
 async def get_filter_statistics(
     db: AsyncIOMotorDatabase = Depends(get_database)
@@ -114,28 +116,61 @@ async def get_filter_statistics(
     """
     Get statistics about filtered parts
     """
-    # Total parts
-    total_parts = await db.ipd_parts.count_documents({})
-    
-    # Parts by effectivity type
-    list_count = await db.ipd_parts.count_documents({"effectivity_type": "LIST"})
-    range_count = await db.ipd_parts.count_documents({"effectivity_type": "RANGE"})
-    
-    # Unique part numbers
-    distinct_parts = await db.ipd_parts.distinct("part_number")
-    
-    # Documents count
-    docs_count = await db.documents.count_documents({})
-    
-    return {
-        "total_parts": total_parts,
-        "parts_by_type": {
-            "LIST": list_count,
-            "RANGE": range_count
-        },
-        "unique_part_numbers": len(distinct_parts),
-        "documents": docs_count,
-        "recent_uploads": await db.documents.count_documents({
-            "uploaded_at": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0)}
+    try:
+        # Total parts
+        total_parts = await db.ipd_parts.count_documents({})
+        
+        # Parts by effectivity type
+        list_count = await db.ipd_parts.count_documents({"effectivity_type": "LIST"})
+        range_count = await db.ipd_parts.count_documents({"effectivity_type": "RANGE"})
+        
+        # Unique part numbers
+        distinct_parts = await db.ipd_parts.distinct("part_number")
+        
+        # Sticker stats
+        sticker_count = await db.ipd_parts.count_documents({
+            "nomenclature": {"$regex": "STENCIL|PLACARD|DECAL|MARKER", "$options": "i"}
         })
-    }
+        
+        # Documents count
+        docs_count = await db.documents.count_documents({})
+        
+        # Most common line numbers (top 10)
+        pipeline = [
+            {"$match": {"effectivity_type": "LIST"}},
+            {"$unwind": "$effectivity_values"},
+            {"$group": {"_id": "$effectivity_values", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10}
+        ]
+        top_lines = await db.ipd_parts.aggregate(pipeline).to_list(length=10)
+        
+        return {
+            "total_parts": total_parts,
+            "parts_by_type": {
+                "LIST": list_count,
+                "RANGE": range_count
+            },
+            "unique_part_numbers": len(distinct_parts),
+            "sticker_count": sticker_count,
+            "documents": docs_count,
+            "top_lines": [
+                {"line": item["_id"], "count": item["count"]} 
+                for item in top_lines
+            ],
+            "recent_uploads": await db.documents.count_documents({
+                "uploaded_at": {"$gte": datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)}
+            })
+        }
+    except Exception as e:
+        print(f"Error in statistics: {e}")
+        return {
+            "total_parts": 0,
+            "parts_by_type": {"LIST": 0, "RANGE": 0},
+            "unique_part_numbers": 0,
+            "sticker_count": 0,
+            "documents": 0,
+            "top_lines": [],
+            "recent_uploads": 0,
+            "error": str(e)
+        }

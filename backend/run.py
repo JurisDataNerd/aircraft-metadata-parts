@@ -6,9 +6,12 @@ Simple script to run the FastAPI server
 import uvicorn
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Load .env from parent directory
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+env_path = Path(__file__).parent.parent / '.env'
+print(f"📁 Loading .env from: {env_path.absolute()}")
+load_dotenv(env_path)
 
 if __name__ == "__main__":
     print("=" * 60)

@@ -158,23 +158,21 @@ async def parse_document_background(document_id: str, pdf_path: str, db):
             
             ipd_part = {
                 "ipd_part_id": part_id,
-                "document_id": document_id,
+                "document_id": document_id,  # Ini string, bukan ObjectId
                 "part_number": part["part_number"],
                 "nomenclature": part.get("nomenclature"),
                 "figure": part.get("figure"),
                 "item": part.get("item"),
+                "is_sticker": False,  # Default
                 "effectivity_type": part["effectivity"]["type"],
                 "effectivity_values": part["effectivity"].get("values"),
-                "effectivity_range": {
-                    "from": part["effectivity"].get("from"),
-                    "to": part["effectivity"].get("to")
-                } if part["effectivity"].get("type") == "RANGE" else None,
-                "upa": part.get("upa"),
+                "effectivity_range": part["effectivity"] if part["effectivity"].get("type") == "RANGE" else None,
+                "upa": part.get("upa"),  # Bisa None
                 "page_number": part["page"],
                 "confidence": part.get("confidence", 0.95),
                 "created_at": datetime.utcnow()
             }
-            
+
             await db.ipd_parts.update_one(
                 {"ipd_part_id": part_id},
                 {"$set": ipd_part},
