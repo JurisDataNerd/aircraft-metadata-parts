@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+motor
+camelot-py[cv]
+opencv-python
+pandas
+python-dotenv
+aiofiles
