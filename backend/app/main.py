@@ -8,11 +8,6 @@ from app.core.database import Database
 from app.api import documents, filter
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO if not settings.DEBUG else logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
