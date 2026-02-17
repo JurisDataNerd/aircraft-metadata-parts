@@ -24,6 +24,21 @@ const router = createRouter({
             meta: { requiresAuth: true },
             children: [
                 {
+                    path: 'admin/upload',
+                    name: 'admin-upload',
+                    component: () => import('../views/AdminUpload.vue'),
+                },
+                {
+                    path: 'history',
+                    name: 'history',
+                    component: () => import('../views/HistoryLog.vue'),
+                },
+                {
+                    path: 'admin',
+                    name: 'admin',
+                    component: () => import('../views/AdminDashboard.vue'),
+                },
+                {
                     path: '', // /app
                     name: 'search',
                     component: ConfigurationSearch,

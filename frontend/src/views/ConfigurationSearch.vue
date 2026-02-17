@@ -9,7 +9,7 @@ import type { IPDPart } from '@/types';
 const partsStore = usePartsStore();
 const searchQuery = ref('');
 const searchType = ref<'line' | 'part'>('line');
-const selectedPart = ref<IPDPart | null>(null);
+const selectedPart = ref(null as IPDPart | null);
 
 const handleSearch = async () => {
   if (!searchQuery.value) return;
@@ -30,80 +30,97 @@ const handleConfirmSelection = (part: IPDPart) => {
     console.log('Confirmed:', part);
     closeDetailModal();
     // In real app, save selection to backend
-    alert(`Confirmed selection: ${part.part_number}`);
+    alert(`Pilihan dikonfirmasi: ${part.part_number}`);
+};
+
+const handleBrowseStickers = async () => {
+    searchQuery.value = 'Browsing Stickers...';
+    await partsStore.searchParts('stickers');
 };
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-8 animate-fade-in">
     <!-- Header Section -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-white">Configuration Search</h1>
-        <p class="text-slate-400">Search by Line Number or Part Number to view configuration status.</p>
-      </div>
-    </div>
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 p-8 md:p-12 shadow-sm">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+      
+      <div class="relative z-10 max-w-2xl">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">
+            Intelijen <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Konfigurasi</span>
+        </h1>
+        <p class="text-lg text-slate-600 leading-relaxed mb-8">
+            Akses data IPD dan Engineering Drawing terpadu dengan penilaian risiko real-time dan deteksi pergeseran konfigurasi.
+        </p>
 
-    <!-- Search Card -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl relative overflow-hidden">
-      <!-- Background Abstract -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-      <div class="relative z-10 flex flex-col md:flex-row gap-4 items-end">
-        <div class="flex-1 w-full space-y-2">
-          <label class="text-sm font-medium text-slate-300">Search Parameter</label>
-          <div class="flex">
-            <div class="relative flex-1">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search class="h-5 w-5 text-slate-500" />
-              </div>
-              <input 
-                v-model="searchQuery"
-                type="text" 
-                class="block w-full pl-10 pr-3 py-3 bg-slate-950 border border-slate-700 rounded-l-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                :placeholder="searchType === 'line' ? 'Enter Line Number (e.g. 1234)' : 'Enter Part Number...'"
-                @keyup.enter="handleSearch"
-              />
+        <!-- Search Bar -->
+        <div class="flex flex-col md:flex-row gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-lg shadow-slate-200/50">
+             <div class="flex-1 relative group">
+                <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input 
+                  v-model="searchQuery"
+                  type="text" 
+                  class="w-full bg-transparent border-none text-slate-800 pl-12 pr-4 py-4 focus:ring-0 placeholder-slate-400 font-medium"
+                  :placeholder="searchType === 'line' ? 'Masukkan Nomor Line (cth. 1234)' : 'Masukkan Nomor Part...'"
+                  @keyup.enter="handleSearch"
+                />
             </div>
-            <select 
-              v-model="searchType"
-              class="bg-slate-800 border-y border-r border-slate-700 text-slate-300 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            >
-              <option value="line">Line No.</option>
-              <option value="part">Part No.</option>
-            </select>
-            <button 
-              @click="handleSearch"
-              class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 px-6 rounded-r-lg transition-all duration-200 flex items-center gap-2 shadow-lg shadow-blue-600/20"
-            >
-              Search
-            </button>
-          </div>
+            
+            <div class="flex items-center gap-2 px-2">
+                <select 
+                  v-model="searchType"
+                  class="bg-slate-50 border-none text-slate-600 rounded-lg py-3 px-4 focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:bg-slate-100 transition-colors"
+                >
+                  <option value="line">Line No.</option>
+                  <option value="part">Part No.</option>
+                </select>
+                
+                <button 
+                  @click="handleSearch"
+                  class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-md flex items-center gap-2"
+                >
+                  Cari
+                </button>
+            </div>
         </div>
-        
-        <div class="hidden md:block">
-           <button class="flex items-center gap-2 text-slate-400 hover:text-white px-4 py-3 rounded-lg border border-slate-800 hover:border-slate-700 transition-all">
+
+        <!-- Browse Shortcuts -->
+        <div class="flex gap-4 mt-6">
+             <button @click="handleBrowseStickers" class="flex items-center gap-2 bg-white/50 hover:bg-white border border-slate-200 px-4 py-2 rounded-lg text-slate-600 hover:text-blue-600 transition-all text-sm font-bold shadow-sm">
+                <Filter class="w-4 h-4" />
+                Browse Stickers (787-8)
+             </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Filters & Stats (Placeholder for now) -->
+    <div v-if="partsStore.searchResults.length > 0" class="flex items-center justify-between px-2">
+        <h2 class="text-xl font-bold text-slate-800">Hasil Pencarian <span class="text-slate-500 font-normal">({{ partsStore.searchResults.length }})</span></h2>
+        <button class="flex items-center gap-2 text-slate-500 hover:text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-all">
              <Filter class="w-4 h-4" />
-             <span>Filters</span>
-           </button>
-        </div>
+             <span>Filter Hasil</span>
+        </button>
+    </div>
+
+    <!-- Results Area -->
+    <div v-if="!partsStore.loading && partsStore.searchResults.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
+      <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6 ring-1 ring-slate-200">
+        <Search class="w-10 h-10 text-slate-400" />
       </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">Belum Ada Konfigurasi Dimuat</h3>
+      <p class="text-slate-500 max-w-md">Mulai dengan mencari Nomor Line atau Nomor Part spesifik untuk melihat matriks konfigurasi.</p>
     </div>
 
-    <!-- Results Area (Empty State or Results) -->
-    <div v-if="!partsStore.loading && partsStore.searchResults.length === 0" class="flex flex-col items-center justify-center py-20 bg-slate-900/50 border border-slate-800/50 rounded-xl border-dashed">
-      <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
-        <Search class="w-8 h-8 text-slate-500" />
-      </div>
-      <h3 class="text-lg font-medium text-slate-300">No Search Results</h3>
-      <p class="text-slate-500 max-w-sm text-center mt-2">Enter a line number or part number above to see configuration details.</p>
+    <div v-else-if="partsStore.loading" class="flex flex-col items-center justify-center py-32">
+       <div class="relative w-16 h-16">
+          <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+       </div>
+       <p class="mt-4 text-slate-500 font-medium animate-pulse">Menganalisis Data Konfigurasi...</p>
     </div>
 
-    <div v-else-if="partsStore.loading" class="flex justify-center py-20">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-    </div>
-
-    <div v-else class="grid grid-cols-1 gap-4">
+    <div v-else class="grid grid-cols-1 gap-4 pb-20">
        <PartCard 
          v-for="part in partsStore.searchResults" 
          :key="part.ipd_part_id" 
@@ -123,3 +140,14 @@ const handleConfirmSelection = (part: IPDPart) => {
     />
   </div>
 </template>
+
+<style scoped>
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { IPDPart, RiskProfile } from '@/types';
-import { X, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-vue-next';
+import { X, CheckCircle, ShieldCheck, FileText, Activity, AlertOctagon } from 'lucide-vue-next';
 
 const props = defineProps<{
   part: IPDPart;
@@ -9,126 +9,171 @@ const props = defineProps<{
   isOpen: boolean;
 }>();
 
-const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'confirm', part: IPDPart): void;
-}>();
+const emit = defineEmits(['close', 'confirm']);
 
-const isVerified = ref(false);
+const isGuardrailChecked = ref(false);
 
 const riskColor = computed(() => {
-  const score = props.riskProfile?.risk_score || 0;
-  if (score < 30) return 'text-green-500';
-  if (score < 70) return 'text-yellow-500';
-  return 'text-red-500';
+    const score = props.riskProfile?.risk_score || 0;
+    if (score >= 80) return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+});
+
+const progressColor = computed(() => {
+    const score = props.riskProfile?.risk_score || 0;
+    if (score >= 80) return 'text-red-500';
+    if (score >= 50) return 'text-yellow-500';
+    return 'text-emerald-500';
+});
+
+const formattedEffectivity = computed(() => {
+    if (props.part.effectivity_type === 'RANGE' && props.part.effectivity_range) {
+        return `${props.part.effectivity_range.from} - ${props.part.effectivity_range.to}`;
+    }
+    return props.part.effectivity_values.join(', ');
 });
 
 const handleConfirm = () => {
-  if (isVerified.value) {
-    emit('confirm', props.part);
-  }
+    if (isGuardrailChecked.value) {
+        emit('confirm', props.part);
+    }
 };
 </script>
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <!-- Backdrop -->
-    <div @click="emit('close')" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"></div>
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="emit('close')"></div>
 
     <!-- Modal Content -->
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+    <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in border border-slate-200">
         
-      <!-- Header -->
-      <div class="p-6 border-b border-slate-800 flex justify-between items-start bg-slate-900/50">
-        <div>
-           <div class="flex items-center gap-2 mb-1">
-             <span class="px-2 py-0.5 rounded textxs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">Decision Preview</span>
-             <span v-if="part.sb_reference" class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">SB RELATED</span>
-           </div>
-           <h2 class="text-2xl font-bold text-white">{{ part.part_number }}</h2>
-           <p class="text-slate-400">{{ part.nomenclature }}</p>
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="px-2.5 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-bold font-mono tracking-wide">
+                        {{ part.part_number }}
+                    </span>
+                    <span v-if="part.is_extracting" class="flex items-center gap-1 text-xs text-blue-600 animate-pulse">
+                        <Activity class="w-3 h-3" /> Memproses Data...
+                    </span>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">{{ part.nomenclature }}</h2>
+            </div>
+            <button @click="emit('close')" class="p-2 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
+                <X class="w-6 h-6" />
+            </button>
         </div>
-        <button @click="emit('close')" class="text-slate-500 hover:text-white transition-colors">
-          <X class="w-6 h-6" />
-        </button>
-      </div>
 
-      <!-- Body -->
-      <div class="p-6 overflow-y-auto space-y-6">
-         <!-- Risk Indicator -->
-         <div class="bg-slate-800/50 rounded-xl p-4 border border-slate-700 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-               <div class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xl" :class="riskColor">
-                  {{ riskProfile?.risk_score ?? '-' }}
-               </div>
-               <div>
-                  <h4 class="font-bold text-slate-200">Risk Score</h4>
-                  <p class="text-xs text-slate-500">Based on historical data & volatility</p>
-               </div>
-            </div>
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-8">
             
-            <div class="text-right">
-               <span class="block text-sm text-slate-400">Volatility</span>
-               <span class="font-bold" :class="{'text-red-400': riskProfile?.volatility_index === 'High', 'text-green-400': riskProfile?.volatility_index === 'Low'}">
-                   {{ riskProfile?.volatility_index ?? 'Unknown' }}
-               </span>
+            <!-- Risk & Status Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Risk Score Card -->
+                <div class="col-span-1 p-5 rounded-xl border flex flex-col items-center justify-center text-center relative overflow-hidden" :class="riskColor">
+                    <h3 class="text-sm font-bold uppercase tracking-wider mb-2 opacity-80">Skor Risiko</h3>
+                    
+                    <!-- Circular Progress (Simple Implementation) -->
+                    <div class="relative w-24 h-24 flex items-center justify-center mb-2">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-200" />
+                            <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" 
+                                :stroke-dasharray="251.2" 
+                                :stroke-dashoffset="251.2 - (251.2 * (riskProfile?.risk_score || 0) / 100)" 
+                                class="transition-all duration-1000 ease-out"
+                                :class="progressColor"
+                            />
+                        </svg>
+                        <span class="absolute text-3xl font-bold">{{ riskProfile?.risk_score || 0 }}</span>
+                    </div>
+
+                    <div v-if="(riskProfile?.volatility_index === 'High')" class="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full mt-2">
+                        <Activity class="w-3 h-3" /> Volatilitas Tinggi
+                    </div>
+                </div>
+
+                <!-- Technical Details -->
+                <div class="col-span-2 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                             <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs font-bold uppercase">
+                                <FileText class="w-4 h-4" /> Item Number
+                            </div>
+                            <p class="font-mono text-lg font-semibold text-slate-800">{{ part.item }}</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                             <div class="flex items-center gap-2 mb-1 text-slate-500 text-xs font-bold uppercase">
+                                <ShieldCheck class="w-4 h-4" /> Efektivitas
+                            </div>
+                            <p class="font-mono text-lg font-semibold text-slate-800">{{ formattedEffectivity }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Warning / Similar Parts -->
+                    <div v-if="(riskProfile?.similar_part_count || 0) > 0" class="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                        <h4 class="flex items-center gap-2 text-yellow-800 font-bold mb-3">
+                            <AlertOctagon class="w-5 h-5" />
+                            Deteksi Part Serupa
+                        </h4>
+                        <p class="text-sm text-yellow-700">
+                            Terdeteksi <span class="font-bold">{{ riskProfile?.similar_part_count }}</span> part serupa yang mungkin relevan dengan konfigurasi ini.
+                        </p>
+                    </div>
+                </div>
             </div>
-         </div>
 
-         <!-- Warnings -->
-         <div v-if="(riskProfile?.similar_part_count || 0) > 0" class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex gap-3 text-yellow-500">
-             <AlertTriangle class="w-5 h-5 shrink-0" />
-             <div class="text-sm">
-                 <strong class="block mb-1">Similar Parts Detected</strong>
-                 <p class="opacity-80">There are {{ riskProfile?.similar_part_count }} other parts with similar nomenclature or number. Please verify carefully.</p>
-             </div>
-         </div>
+             <!-- Description -->
+             <div>
+                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Deskripsi Teknis</h3>
+                <p class="text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    Ini adalah komponen konfigurasi standar. Pastikan untuk memverifikasi referensi silang dengan dokumen IPD terbaru sebelum instalasi. Periksa drawing engineering untuk toleransi dimensi spesifik.
+                </p>
+            </div>
+        </div>
 
-         <!-- Details Grid -->
-         <div class="grid grid-cols-2 gap-4 text-sm">
-             <div class="p-3 rounded bg-slate-800/30">
-                 <span class="block text-slate-500 mb-1">Figure / Item</span>
-                 <span class="font-mono text-slate-300">{{ part.figure }} / {{ part.item }}</span>
-             </div>
-             <div class="p-3 rounded bg-slate-800/30">
-                 <span class="block text-slate-500 mb-1">Effectivity</span>
-                 <span class="font-mono text-slate-300">
-                     {{ part.effectivity_type === 'RANGE' 
-                        ? `${part.effectivity_range?.from} - ${part.effectivity_range?.to}` 
-                        : part.effectivity_values.join(', ') }}
-                 </span>
-             </div>
-         </div>
-      </div>
+        <!-- Guardrail Footer -->
+        <div class="p-6 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+             <label class="flex items-center gap-3 cursor-pointer group">
+                <div class="relative">
+                    <input type="checkbox" v-model="isGuardrailChecked" class="peer sr-only">
+                    <div class="w-6 h-6 border-2 border-slate-300 rounded bg-white peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
+                        <CheckCircle class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                    </div>
+                </div>
+                <span class="text-sm font-medium text-slate-600 group-hover:text-slate-800 select-none">
+                    Saya telah memverifikasi kecocokan part ini dengan persyaratan konfigurasi.
+                </span>
+            </label>
 
-      <!-- Footer (Guardrail) -->
-      <div class="p-6 border-t border-slate-800 bg-slate-900/80 backdrop-blur pb-8">
-          <label class="flex items-start gap-3 cursor-pointer group mb-6">
-              <div class="relative flex items-center">
-                  <input type="checkbox" v-model="isVerified" class="peer sr-only" />
-                  <div class="w-6 h-6 border-2 border-slate-500 rounded peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center">
-                      <CheckCircle class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                  </div>
-              </div>
-              <div>
-                  <span class="font-medium text-slate-200 group-hover:text-white transition-colors">I verify this selection against official documents</span>
-                  <p class="text-xs text-slate-500 mt-1">By confirming, you acknowledge that you have cross-referenced the drawing/IPD.</p>
-              </div>
-          </label>
-
-          <button 
-             @click="handleConfirm"
-             :disabled="!isVerified"
-             class="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
-             :class="isVerified 
-                ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20' 
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed'"
-          >
-             <ShieldCheck class="w-5 h-5" />
-             Confirm Selection
-          </button>
-      </div>
+            <div class="flex gap-3 w-full md:w-auto">
+                <button @click="emit('close')" class="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-100 transition-colors">
+                    Batal
+                </button>
+                <button 
+                    @click="handleConfirm"
+                    :disabled="!isGuardrailChecked"
+                    class="flex-1 md:flex-none px-6 py-2.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center justify-center gap-2"
+                >
+                    <ShieldCheck class="w-4 h-4" />
+                    Konfirmasi Pilihan
+                </button>
+            </div>
+        </div>
 
     </div>
   </div>
 </template>
+
+<style scoped>
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+</style>

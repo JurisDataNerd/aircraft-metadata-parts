@@ -23,6 +23,7 @@ export interface IPDPart {
     upa?: string;
     sb_reference?: string;
     page_number?: number;
+    is_extracting?: boolean;
 }
 
 export interface DrawingItem {
@@ -50,6 +51,7 @@ export interface RiskProfile {
     risk_score: number;
     volatility_index: 'Low' | 'Medium' | 'High';
     similar_part_count: number;
+    similar_parts: string[];
     warning_count_30d: number;
     error_report_count: number;
     last_updated: string;

@@ -48,6 +48,7 @@ const MOCK_RISK_PROFILE: RiskProfile = {
     risk_score: 15,
     volatility_index: 'Low',
     similar_part_count: 2,
+    similar_parts: ['BACN10J-5', 'BACN10J-3'],
     warning_count_30d: 0,
     error_report_count: 0,
     last_updated: new Date().toISOString()
@@ -58,6 +59,7 @@ const MOCK_HIGH_RISK_PROFILE: RiskProfile = {
     risk_score: 75,
     volatility_index: 'High',
     similar_part_count: 12,
+    similar_parts: ['NAS1149F0363P-1', 'NAS1149F0363P-2'],
     warning_count_30d: 5,
     error_report_count: 2,
     last_updated: new Date().toISOString()

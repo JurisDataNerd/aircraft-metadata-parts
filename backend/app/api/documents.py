@@ -14,6 +14,27 @@ from app.models.document import DocumentModel
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
+@router.get("/")
+async def list_documents(
+    limit: int = 50,
+    skip: int = 0,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """List all uploaded documents"""
+    cursor = db.documents.find().sort("uploaded_at", -1).skip(skip).limit(limit)
+    documents = await cursor.to_list(length=limit)
+    
+    # Convert ObjectId
+    for doc in documents:
+        doc["_id"] = str(doc["_id"])
+        
+    return {
+        "total": await db.documents.count_documents({}),
+        "items": documents,
+        "limit": limit,
+        "skip": skip
+    }
+
 @router.post("/upload")
 async def upload_document(
     background_tasks: BackgroundTasks,

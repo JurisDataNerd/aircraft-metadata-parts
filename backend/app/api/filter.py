@@ -174,3 +174,45 @@ async def get_filter_statistics(
             "recent_uploads": 0,
             "error": str(e)
         }
+@router.get("/browse")
+async def browse_parts(
+    type: str = Query(..., description="Type of parts to browse (e.g. sticker)"),
+    model: str = "787-8",
+    limit: int = 50,
+    skip: int = 0,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Browse parts by category (e.g. Stickers)
+    """
+    query = {}
+    
+    # Filter by type (regex for stickers/placards)
+    if type.lower() == "sticker":
+        query["nomenclature"] = {"$regex": "STENCIL|PLACARD|DECAL|MARKER", "$options": "i"}
+    
+    # Filter by model (future use, currently all are 787-8)
+    # query["model"] = model 
+
+    cursor = db.ipd_parts.find(query).skip(skip).limit(limit)
+    parts = await cursor.to_list(length=limit)
+    
+    return {
+        "type": type,
+        "model": model,
+        "total": await db.ipd_parts.count_documents(query),
+        "items": [
+            {
+                "ipd_part_id": p["ipd_part_id"],
+                "part_number": p["part_number"],
+                "nomenclature": p.get("nomenclature"),
+                "item": p.get("item"),
+                "figure": p.get("figure"),
+                "effectivity_type": p["effectivity_type"],
+                "effectivity_values": p.get("effectivity_values"),
+                "effectivity_range": p.get("effectivity_range"),
+                "upa": p.get("upa")
+            }
+            for p in parts
+        ]
+    }
